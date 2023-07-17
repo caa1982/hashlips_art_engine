@@ -5,8 +5,8 @@ const { NETWORK } = require(`${basePath}/constants/network.js`);
 const network = NETWORK.eth;
 
 // General metadata for Ethereum
-const namePrefix = "Your Collection";
-const description = "Remember to replace this description";
+const namePrefix = "";
+const description = "ElfTribes";
 const baseUri = "ipfs://NewUriToReplace";
 
 const solanaMetadata = {
@@ -24,15 +24,21 @@ const solanaMetadata = {
 // If you have selected Solana then the collection starts from 0 automatically
 const layerConfigurations = [
   {
-    growEditionSizeTo: 5,
+    growEditionSizeTo: 150,
     layersOrder: [
       { name: "Background" },
-      { name: "Eyeball" },
-      { name: "Eye color" },
-      { name: "Iris" },
-      { name: "Shine" },
-      { name: "Bottom lid" },
-      { name: "Top lid" },
+      { name: "Head" },
+      { name: "Weapons" },
+      { name: "Tribe" },
+      { name: "Skin" },
+      { name: "Eyes" },
+      { name: "Buckle" },
+      { name: "Chicks" },
+      { name: "Earings" },
+      { name: "Hat" },
+      { name: "Mouth" },
+      { name: "Jacket" },
+      { name: "Buttons" },
     ],
   },
 ];
@@ -42,9 +48,9 @@ const shuffleLayerConfigurations = false;
 const debugLogs = false;
 
 const format = {
-  width: 512,
-  height: 512,
-  smoothing: false,
+  width: 2500,
+  height: 2500,
+  smoothing: true,
 };
 
 const gif = {
@@ -78,7 +84,9 @@ const background = {
   default: "#000000",
 };
 
-const extraMetadata = {};
+const extraMetadata = {
+  external_url: "https://ElfTribes.com",
+};
 
 const rarityDelimiter = "#";
 

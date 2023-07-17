@@ -1,6 +1,9 @@
 const basePath = process.cwd();
 const { NETWORK } = require(`${basePath}/constants/network.js`);
 const fs = require("fs");
+const elfDescription = require("./ElfDescription/description");
+const getPoints = require("./pointByTribe");
+const elfName = require("./elfName");
 const sha1 = require(`${basePath}/node_modules/sha1`);
 const { createCanvas, loadImage } = require(`${basePath}/node_modules/canvas`);
 const buildDir = `${basePath}/build`;
@@ -131,16 +134,177 @@ const drawBackground = () => {
 const addMetadata = (_dna, _edition) => {
   let dateTime = Date.now();
   let tempMetadata = {
-    name: `${namePrefix} #${_edition}`,
+    name: `#${_edition}`,
     description: description,
     image: `${baseUri}/${_edition}.png`,
-    dna: sha1(_dna),
-    edition: _edition,
-    date: dateTime,
     ...extraMetadata,
-    attributes: attributesList,
-    compiler: "HashLips Art Engine",
+    attributes: attributesList.map((obj) =>
+      Object.fromEntries(
+        Object.entries(obj).map(([key, value]) => [
+          key,
+          typeof value === "string" ? value.toLowerCase() : value,
+        ])
+      )
+    ),
   };
+
+  const boost = ([a, b] = (() => {
+    const arr = [
+      "magic",
+      "speed",
+      "intelligence",
+      "strength",
+      "agility",
+      "luck",
+      "defense",
+    ];
+    const rand1 = Math.floor(Math.random() * arr.length);
+    const rand2 =
+      (rand1 + 1 + Math.floor(Math.random() * (arr.length - 1))) % arr.length;
+    return [arr[rand1], arr[rand2]];
+  })());
+
+  function getCreature(name) {
+    const elvesTribes = [
+      "time",
+      "tattooed",
+      "scientist",
+      "healing",
+      "guardian",
+      "dream",
+      "tree",
+      "elemental",
+    ];
+    const creatures = [
+      "pegasus",
+      "centaur",
+      "sphinx",
+      "phoenix",
+      "dragon",
+      "unicorn",
+      "dryad",
+      "fairy",
+    ];
+
+    const tribes = [
+      "time travelers",
+      "tattooed",
+      "scientist",
+      "healing",
+      "guardian",
+      "dream",
+      "tree speaking",
+      "elemental",
+    ];
+
+    const color = [
+      "purple",
+      "red",
+      "yellow",
+      "pink",
+      "teal",
+      "blue",
+      "green",
+      "orange",
+    ];
+
+    const symbol = [
+      "hourglass",
+      "arrow",
+      "gear",
+      "crystal ball",
+      "shield",
+      "crescent Moon",
+      "tree",
+      "four-pointed star",
+    ];
+
+    const tribe = name.split(" ")[0];
+    const index = elvesTribes.indexOf(tribe);
+    const shield = name.includes("shield");
+
+    if (index !== -1) {
+      return [
+        creatures[index],
+        tribes[index],
+        color[index],
+        shield,
+        symbol[index],
+      ];
+    } else {
+      return null;
+    }
+  }
+
+  const detail = getCreature(tempMetadata.attributes[3].value);
+
+  console.log(detail);
+
+  tempMetadata.attributes[3].value = detail[1];
+
+  const points = getPoints(detail[1]);
+
+  tempMetadata.attributes.push(
+    {
+      trait_type: "shield",
+      value: detail[3] ? detail[2] + " " + detail[4] : "none",
+    },
+    {
+      trait_type: "familiar",
+      value: detail[0],
+    },
+    {
+      display_type: "number",
+      trait_type: "magic",
+      value: points.magic,
+    },
+    {
+      display_type: "number",
+      trait_type: "speed",
+      value: points.speed,
+    },
+    {
+      display_type: "number",
+      trait_type: "intelligence",
+      value: points.intelligence,
+    },
+    {
+      display_type: "number",
+      trait_type: "strength",
+      value: points.strength,
+    },
+    {
+      display_type: "number",
+      trait_type: "agility",
+      value: points.agility,
+    },
+    {
+      display_type: "number",
+      trait_type: "luck",
+      value: points.luck,
+    },
+    {
+      display_type: "number",
+      trait_type: "defense",
+      value: points.defense,
+    },
+    {
+      display_type: "number",
+      trait_type: "attack",
+      value: points.attack,
+    },
+    {
+      display_type: "boost_percentage",
+      trait_type: boost[0],
+      value: Math.floor(Math.random() * 100) + 1,
+    },
+    {
+      display_type: "boost_percentage",
+      trait_type: boost[1],
+      value: Math.floor(Math.random() * 100) + 1,
+    }
+  );
+
   if (network == NETWORK.sol) {
     tempMetadata = {
       //Added metadata for solana
@@ -175,7 +339,7 @@ const addAttributes = (_element) => {
   let selectedElement = _element.layer.selectedElement;
   attributesList.push({
     trait_type: _element.layer.name,
-    value: selectedElement.name,
+    value: selectedElement.name.trim(),
   });
 };
 
@@ -308,7 +472,12 @@ const writeMetaData = (_data) => {
 };
 
 const saveMetaDataSingleFile = (_editionCount) => {
-  let metadata = metadataList.find((meta) => meta.edition == _editionCount);
+  let metadata = metadataList.find((meta) => meta.name == "#" + _editionCount);
+  metadata.name =
+    elfName(metadata.attributes.find((m) => m.trait_type === "tribe")?.value) +
+    " #" +
+    _editionCount;
+  metadata.description = elfDescription(metadata);
   debugLogs
     ? console.log(
         `Writing metadata for ${_editionCount}: ${JSON.stringify(metadata)}`
